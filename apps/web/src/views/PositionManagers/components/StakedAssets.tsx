@@ -1,12 +1,12 @@
-import { memo, useMemo } from 'react'
-import { Button, Text, RowBetween, Row, Flex, MinusIcon, AddIcon } from '@pancakeswap/uikit'
-import { CurrencyLogo } from '@pancakeswap/widgets-internal'
-import type { AtomBoxProps } from '@pancakeswap/uikit'
 import { useTranslation } from '@pancakeswap/localization'
+import { Currency, CurrencyAmount } from '@pancakeswap/sdk'
+import type { AtomBoxProps } from '@pancakeswap/uikit'
+import { AddIcon, Button, Flex, MinusIcon, Row, RowBetween, Text } from '@pancakeswap/uikit'
 import { formatAmount } from '@pancakeswap/utils/formatFractions'
-import { Currency, CurrencyAmount, Price } from '@pancakeswap/sdk'
+import { CurrencyLogo } from '@pancakeswap/widgets-internal'
+import { memo, useMemo } from 'react'
 import { styled } from 'styled-components'
-import { useTotalAssetInUsd, useTotalAssetInSingleDepositTokenAmount } from '../hooks'
+import { useTotalAssetInSingleDepositTokenAmount, useTotalAssetInUsd } from '../hooks'
 
 const Title = styled(Text).attrs({
   bold: true,
@@ -27,7 +27,6 @@ interface StakedAssetsProps {
   token1PriceUSD?: number
   isSingleDepositToken?: boolean
   isSingleDepositToken0?: boolean
-  price?: Price<Currency, Currency>
   onAdd?: () => void
   onRemove?: () => void
 }
@@ -81,10 +80,10 @@ export const StakedAssets = memo(function StakedAssets({
           )}
         </Flex>
         <Flex flexDirection="row" justifyContent="flex-end">
-          <ActionButton scale="md" onClick={onRemove}>
+          <ActionButton scale="md" onClick={onRemove} variant="secondary">
             <MinusIcon color="currentColor" width="1.5em" />
           </ActionButton>
-          <ActionButton scale="md" ml="0.5em" onClick={onAdd}>
+          <ActionButton scale="md" ml="0.5em" onClick={onAdd} variant="secondary">
             <AddIcon color="currentColor" width="1.5em" />
           </ActionButton>
         </Flex>
@@ -113,13 +112,13 @@ export const CurrencyAmountDisplay = memo(function CurrencyAmountDisplay({
   const amountDisplay = useMemo(() => formatAmount(amount) || '0', [amount])
 
   const amountInUsd = useMemo(() => {
-    return Number(formatAmount(amount)) * (priceUSD ?? 0)
+    return Number(formatAmount(amount)) * (priceUSD ?? 0) || 0
   }, [amount, priceUSD])
 
   return (
     <RowBetween {...rest}>
       <Flex flexDirection="row" justifyContent="flex-start">
-        <CurrencyLogo currency={currencyDisplay} />
+        <CurrencyLogo currency={currencyDisplay} useTrustWalletUrl={false} />
         <Text color="textSubtle" ml="0.5em">
           {currencyDisplay.symbol}
         </Text>

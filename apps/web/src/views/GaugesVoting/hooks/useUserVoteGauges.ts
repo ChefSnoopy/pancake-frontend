@@ -1,16 +1,8 @@
-import { gaugesVotingABI } from '@pancakeswap/gauges'
 import { useQuery } from '@tanstack/react-query'
 import useAccountActiveChain from 'hooks/useAccountActiveChain'
 import { useGaugesVotingContract } from 'hooks/useContract'
 import { useMemo } from 'react'
-import {
-  ContractFunctionConfig,
-  ContractFunctionResult,
-  Hex,
-  MulticallContracts,
-  isAddressEqual,
-  zeroAddress,
-} from 'viem'
+import { Hex, isAddressEqual, zeroAddress } from 'viem'
 import { useVeCakeUserInfo } from 'views/CakeStaking/hooks/useVeCakeUserInfo'
 import { usePublicClient } from 'wagmi'
 import { useGauges } from './useGauges'
@@ -32,21 +24,27 @@ export const useUserVoteSlopes = () => {
   const { account, chainId } = useAccountActiveChain()
   const publicClient = usePublicClient({ chainId })
 
-  const { data, refetch } = useQuery(
-    ['/vecake/user-vote-slopes', gaugesVotingContract.address, account, gauges?.length, userInfo?.cakePoolProxy],
-    async (): Promise<VoteSlope[]> => {
+  const { data, refetch } = useQuery({
+    queryKey: [
+      '/vecake/user-vote-slopes',
+      gaugesVotingContract.address,
+      account,
+      gauges?.length,
+      userInfo?.cakePoolProxy,
+    ],
+
+    queryFn: async (): Promise<VoteSlope[]> => {
       if (!gauges || gauges.length === 0 || !account) return []
 
       const hasProxy = userInfo?.cakePoolProxy && !isAddressEqual(userInfo?.cakePoolProxy, zeroAddress)
 
-      const contracts: MulticallContracts<ContractFunctionConfig<typeof gaugesVotingABI, 'voteUserSlopes'>[]> =
-        gauges.map((gauge) => {
-          return {
-            ...gaugesVotingContract,
-            functionName: 'voteUserSlopes',
-            args: [account, gauge.hash as Hex],
-          } as const
-        })
+      const contracts = gauges.map((gauge) => {
+        return {
+          ...gaugesVotingContract,
+          functionName: 'voteUserSlopes',
+          args: [account, gauge.hash as Hex],
+        } as const
+      })
 
       if (hasProxy) {
         gauges.forEach((gauge) => {
@@ -58,10 +56,12 @@ export const useUserVoteSlopes = () => {
         })
       }
 
-      const response = (await publicClient.multicall({
-        contracts,
-        allowFailure: false,
-      })) as ContractFunctionResult<typeof gaugesVotingABI, 'voteUserSlopes'>[]
+      const response = publicClient
+        ? await publicClient.multicall({
+            contracts,
+            allowFailure: false,
+          })
+        : []
 
       const len = gauges.length
       return gauges.map((gauge, index) => {
@@ -78,10 +78,9 @@ export const useUserVoteSlopes = () => {
         }
       })
     },
-    {
-      enabled: Boolean(gauges && gauges.length) && account && account !== '0x',
-    },
-  )
+
+    enabled: Boolean(gauges && gauges.length) && account && account !== '0x',
+  })
 
   return {
     data: data ?? [],

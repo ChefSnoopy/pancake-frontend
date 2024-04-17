@@ -2,7 +2,7 @@ import { useTranslation } from '@pancakeswap/localization'
 import { AutoRow, BalanceInput, BalanceInputProps, Box, Button, FlexGap, Image, Text } from '@pancakeswap/uikit'
 import { MAX_VECAKE_LOCK_WEEKS } from 'config/constants/veCake'
 import { useAtom, useAtomValue } from 'jotai'
-import { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { cakeLockWeeksAtom } from 'state/vecake/atoms'
 import styled from 'styled-components'
 import { useWriteIncreaseLockWeeksCallback } from '../hooks/useContractWrite'
@@ -36,7 +36,14 @@ const weeks = [
 
 const ButtonBlocked = styled(Button)`
   flex: 1;
+  white-space: nowrap;
 `
+
+const LockImageElement = React.memo(() => (
+  <Box width={40} mr={12}>
+    <Image src="/images/cake-staking/lock.png" height={37} width={34} />
+  </Box>
+))
 
 const WeekInput: React.FC<{
   value: BalanceInputProps['value']
@@ -69,10 +76,13 @@ const WeekInput: React.FC<{
     },
     [onInput],
   )
+
   return (
     <>
       <BalanceInput
         width="100%"
+        mb="8px"
+        placeholder="0"
         inputProps={{
           style: { textAlign: 'left', marginTop: '1px', marginBottom: '1px' },
           disabled,
@@ -80,6 +90,7 @@ const WeekInput: React.FC<{
           pattern: '^[0-9]*$',
         }}
         value={value}
+        appendComponent={<LockImageElement />}
         onUserInput={onInput}
         unit={t('Weeks')}
       />
@@ -115,42 +126,52 @@ const WeekInput: React.FC<{
   )
 }
 
-export const LockWeeksForm: React.FC<{
+interface LockWeeksFormProps {
   fieldOnly?: boolean
   expired?: boolean
   disabled?: boolean
-}> = ({ fieldOnly, expired, disabled }) => {
+  hideLockWeeksDataSetStyle?: boolean
+  customVeCakeCard?: null | JSX.Element
+  onDismiss?: () => void
+}
+
+export const LockWeeksForm: React.FC<React.PropsWithChildren<LockWeeksFormProps>> = ({
+  fieldOnly,
+  expired,
+  disabled,
+  customVeCakeCard,
+  hideLockWeeksDataSetStyle,
+  onDismiss,
+}) => {
   const { t } = useTranslation()
   const [value, onChange] = useAtom(cakeLockWeeksAtom)
+
   return (
-    <AutoRow alignSelf="start" gap="16px">
-      <FlexGap gap="8px" alignItems="center" height="40px">
-        <Box width={40}>
-          <Image src="/images/cake-staking/lock.png" height={37} width={34} mx="auto" />
-        </Box>
-        <FlexGap gap="4px">
-          <Text color="textSubtle" textTransform="uppercase" fontSize={16} bold>
-            {t('add')}
-          </Text>
-          <Text color="secondary" textTransform="uppercase" fontSize={16} bold>
-            {t('duration')}
-          </Text>
-        </FlexGap>
+    <AutoRow alignSelf="start">
+      <FlexGap gap="4px" alignItems="center" mb="4px">
+        <Text color="textSubtle" textTransform="uppercase" fontSize={16} bold>
+          {t('add')}
+        </Text>
+        <Text color="textSubtle" textTransform="uppercase" fontSize={16} bold>
+          {t('duration')}
+        </Text>
       </FlexGap>
 
       <WeekInput value={value} onUserInput={onChange} disabled={disabled} />
 
+      {customVeCakeCard}
+
       {fieldOnly ? null : (
         <>
-          {disabled ? null : <LockWeeksDataSet />}
+          {disabled ? null : <LockWeeksDataSet hideLockWeeksDataSetStyle={hideLockWeeksDataSetStyle} />}
 
           {expired ? (
-            <FlexGap width="100%" gap="16px">
+            <FlexGap width="100%" mt="16px" gap="16px">
               <SubmitUnlockButton />
               <SubmitRenewButton />
             </FlexGap>
           ) : (
-            <SubmitLockButton disabled={disabled} />
+            <SubmitLockButton disabled={disabled} onDismiss={onDismiss} />
           )}
         </>
       )}
@@ -158,14 +179,14 @@ export const LockWeeksForm: React.FC<{
   )
 }
 
-const SubmitLockButton = ({ disabled }) => {
+const SubmitLockButton = ({ disabled, onDismiss }: { disabled?: boolean; onDismiss?: () => void }) => {
   const { t } = useTranslation()
   const cakeLockWeeks = useAtomValue(cakeLockWeeksAtom)
   const _disabled = useMemo(() => !cakeLockWeeks || cakeLockWeeks === '0' || disabled, [cakeLockWeeks, disabled])
-  const increaseLockWeeks = useWriteIncreaseLockWeeksCallback()
+  const increaseLockWeeks = useWriteIncreaseLockWeeksCallback(onDismiss)
 
   return (
-    <Button disabled={_disabled} width="100%" onClick={increaseLockWeeks}>
+    <Button mt="16px" disabled={_disabled} width="100%" onClick={increaseLockWeeks}>
       {t('Extend Lock')}
     </Button>
   )
@@ -196,8 +217,7 @@ const SubmitRenewButton = () => {
 
   return (
     <ButtonBlocked disabled={disabled} onClick={renew}>
-      {' '}
-      {t('Renew Lock')}{' '}
+      {t('Renew Lock')}
     </ButtonBlocked>
   )
 }

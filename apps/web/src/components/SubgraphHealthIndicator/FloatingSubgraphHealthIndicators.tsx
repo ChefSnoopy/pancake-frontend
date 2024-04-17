@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { GRAPH_API_PREDICTION_BNB } from '@pancakeswap/prediction'
 import { GRAPH_API_LOTTERY, V3_SUBGRAPH_URLS } from 'config/constants/endpoints'
 import { useActiveChainId } from 'hooks/useActiveChainId'
+import { getPortalRoot } from '@pancakeswap/uikit'
 import { SubgraphHealthIndicator, SubgraphHealthIndicatorProps } from './SubgraphHealthIndicator'
 
 interface FactoryParams {
@@ -15,7 +16,7 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 export function subgraphHealthIndicatorFactory({ getSubgraphName }: FactoryParams) {
-  return function Indicator(props: PartialBy<SubgraphHealthIndicatorProps, 'subgraphName'>) {
+  return function Indicator(props: PartialBy<SubgraphHealthIndicatorProps, 'subgraphName' | 'chainId'>) {
     const { chainId } = useActiveChainId()
     const subgraphName = useMemo(() => chainId && getSubgraphName(chainId), [chainId])
 
@@ -23,7 +24,11 @@ export function subgraphHealthIndicatorFactory({ getSubgraphName }: FactoryParam
       return null
     }
 
-    return createPortal(<SubgraphHealthIndicator subgraphName={subgraphName} {...props} />, document.body)
+    const portalRoot = getPortalRoot()
+
+    return portalRoot
+      ? createPortal(<SubgraphHealthIndicator chainId={chainId} subgraphName={subgraphName} {...props} />, portalRoot)
+      : null
   }
 }
 

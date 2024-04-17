@@ -1,5 +1,103 @@
 # @pancakeswap/tokens
 
+## 0.6.12
+
+### Patch Changes
+
+- Updated dependencies [72c834c]
+- Updated dependencies [d4283e5]
+  - @pancakeswap/sdk@5.8.1
+  - @pancakeswap/chains@0.4.2
+  - @pancakeswap/token-lists@0.0.11
+
+## 0.6.11
+
+### Patch Changes
+
+- 30ef48c: Add new tokens
+
+## 0.6.10
+
+### Patch Changes
+
+- d7586b8: Update farms, pools, gauges, tokens
+
+## 0.6.9
+
+### Patch Changes
+
+- e26505f: List new pool, farm, token and gauges
+
+## 0.6.8
+
+### Patch Changes
+
+- 928b9a8: Bump version only
+
+## 0.6.7
+
+### Patch Changes
+
+- Updated dependencies [610a24a]
+  - @pancakeswap/sdk@5.8.0
+  - @pancakeswap/token-lists@0.0.11
+
+## 0.6.6
+
+### Patch Changes
+
+- @pancakeswap/sdk@5.7.7
+- @pancakeswap/token-lists@0.0.10
+
+## 0.6.5
+
+### Patch Changes
+
+- 6157db8: add defi
+
+## 0.6.4
+
+### Patch Changes
+
+- 82f61f9: Bump token for missing sol
+
+## 0.6.3
+
+### Patch Changes
+
+- a8ffc15: Add dlp mdlp stable pair
+
+## 0.6.2
+
+### Patch Changes
+
+- 91969f80f: Add sepolia, base sepolia, arbitrum sepolia support
+- Updated dependencies [91969f80f]
+  - @pancakeswap/sdk@5.7.6
+  - @pancakeswap/chains@0.4.1
+  - @pancakeswap/token-lists@0.0.9
+
+## 0.6.1
+
+### Patch Changes
+
+- 48ac84692: Add new stable pairs
+
+## 0.6.0
+
+### Minor Changes
+
+- 205c08713: List mPENDLE on arbitrum
+
+## 0.5.8
+
+### Patch Changes
+
+- Updated dependencies [8fcd67c85]
+  - @pancakeswap/chains@0.4.0
+  - @pancakeswap/sdk@5.7.5
+  - @pancakeswap/token-lists@0.0.9
+
 ## 0.5.7
 
 ### Patch Changes

@@ -1,20 +1,10 @@
 import { ChainId } from '@pancakeswap/chains'
 import { useTranslation } from '@pancakeswap/localization'
 import { CAKE } from '@pancakeswap/tokens'
-import {
-  AutoRow,
-  Balance,
-  BalanceInput,
-  BalanceInputProps,
-  Box,
-  Button,
-  Flex,
-  FlexGap,
-  Text,
-  TokenImage,
-} from '@pancakeswap/uikit'
-import { formatBigInt, getFullDisplayBalance } from '@pancakeswap/utils/formatBalance'
+import { AutoRow, Balance, BalanceInput, BalanceInputProps, Button, Flex, FlexGap, Text } from '@pancakeswap/uikit'
+import { formatBigInt, getDecimalAmount, getFullDisplayBalance } from '@pancakeswap/utils/formatBalance'
 import BN from 'bignumber.js'
+import { TokenImage } from 'components/TokenImage'
 import { useCakePrice } from 'hooks/useCakePrice'
 import { useAtom, useAtomValue } from 'jotai'
 import { useCallback, useMemo, useState } from 'react'
@@ -73,15 +63,23 @@ const CakeInput: React.FC<{
     </Flex>
   )
 
+  const appendComponent = (
+    <Flex alignSelf="center" width={40} mr={12}>
+      <TokenImage width={40} height={40} token={CAKE[ChainId.BSC]} />
+    </Flex>
+  )
+
   return (
     <>
       <BalanceInput
         width="100%"
+        mb="8px"
         value={value}
         onUserInput={onInput}
         inputProps={{ style: { textAlign: 'left', height: '20px' }, disabled }}
         currencyValue={usdValue}
         unit={balance}
+        appendComponent={appendComponent}
       />
       {!disabled && balance ? (
         <FlexGap justifyContent="space-between" flexWrap="wrap" gap="4px" width="100%">
@@ -116,51 +114,51 @@ export const LockCakeForm: React.FC<{
   // show input field only
   fieldOnly?: boolean
   disabled?: boolean
-}> = ({ fieldOnly, disabled }) => {
+  hideLockCakeDataSetStyle?: boolean
+  customVeCakeCard?: null | JSX.Element
+  onDismiss?: () => void
+}> = ({ fieldOnly, disabled, customVeCakeCard, hideLockCakeDataSetStyle, onDismiss }) => {
   const { t } = useTranslation()
   const [value, onChange] = useAtom(cakeLockAmountAtom)
 
   return (
-    <AutoRow alignSelf="start" gap="16px">
-      <FlexGap gap="8px" alignItems="center" height="40px">
-        <Box width={40}>
-          <TokenImage
-            src={`https://pancakeswap.finance/images/tokens/${CAKE[ChainId.BSC].address}.png`}
-            height={40}
-            width={40}
-            title={CAKE[ChainId.BSC].symbol}
-          />
-        </Box>
-        <FlexGap gap="4px">
-          <Text color="textSubtle" textTransform="uppercase" fontSize={16} bold>
-            {t('add')}
-          </Text>
-          <Text color="secondary" textTransform="uppercase" fontSize={16} bold>
-            {t('stake')}
-          </Text>
-        </FlexGap>
+    <AutoRow alignSelf="start">
+      <FlexGap gap="4px" alignItems="center" mb="4px">
+        <Text color="textSubtle" textTransform="uppercase" fontSize={16} bold>
+          {t('add')}
+        </Text>
+        <Text color="textSubtle" textTransform="uppercase" fontSize={16} bold>
+          {t('CAKE')}
+        </Text>
       </FlexGap>
       <CakeInput value={value} onUserInput={onChange} disabled={disabled} />
 
+      {customVeCakeCard}
+
       {fieldOnly ? null : (
         <>
-          {disabled ? null : <LockCakeDataSet />}
+          {disabled ? null : <LockCakeDataSet hideLockCakeDataSetStyle={hideLockCakeDataSetStyle} />}
 
-          <SubmitLockButton />
+          <SubmitLockButton onDismiss={onDismiss} />
         </>
       )}
     </AutoRow>
   )
 }
 
-const SubmitLockButton = () => {
+const SubmitLockButton = ({ onDismiss }: { onDismiss?: () => void }) => {
   const { t } = useTranslation()
+  const _cakeBalance = useBSCCakeBalance()
   const cakeLockAmount = useAtomValue(cakeLockAmountAtom)
-  const disabled = useMemo(() => !cakeLockAmount || cakeLockAmount === '0', [cakeLockAmount])
-  const increaseLockAmount = useWriteApproveAndIncreaseLockAmountCallback()
+  const disabled = useMemo(
+    () =>
+      !cakeLockAmount || cakeLockAmount === '0' || getDecimalAmount(new BN(cakeLockAmount)).gt(_cakeBalance.toString()),
+    [_cakeBalance, cakeLockAmount],
+  )
+  const increaseLockAmount = useWriteApproveAndIncreaseLockAmountCallback(onDismiss)
 
   return (
-    <Button disabled={disabled} width="100%" onClick={increaseLockAmount}>
+    <Button mt="16px" disabled={disabled} width="100%" onClick={increaseLockAmount}>
       {t('Add CAKE')}
     </Button>
   )

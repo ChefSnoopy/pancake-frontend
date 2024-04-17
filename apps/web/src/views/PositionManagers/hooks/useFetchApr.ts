@@ -11,6 +11,7 @@ import { Address } from 'viem'
 export interface AprDataInfo {
   token0: number
   token1: number
+  rewardAmount: number
   chainId: ChainId
   lpAddress: Address
   calculationDays: number
@@ -30,7 +31,7 @@ export const TIME_WINDOW_FALLBACK = 0
 const fetchAllSpecificTimeWindow = async (timeWindows: number[], chainId?: number) => {
   const data = await Promise.all(
     timeWindows.map(async (timeWindow) => {
-      const response = await fetch(`${POSITION_MANAGER_API}/${chainId}/vault/feeAvg`, {
+      const response = await fetch(`${POSITION_MANAGER_API}?chainId=${chainId}&item=feeAvg`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -58,11 +59,12 @@ export const useFetchApr = (timeWindows: number[]): AprData => {
     return Boolean(chainId && chainIds.includes(chainId))
   }, [chainId])
 
-  const { data, isLoading, refetch } = useQuery(
-    ['/fetch-position-manager-apr', chainId],
-    async () => {
+  const { data, isPending, refetch } = useQuery({
+    queryKey: ['/fetch-position-manager-apr', chainId],
+
+    queryFn: async () => {
       try {
-        const response = await fetch(`${POSITION_MANAGER_API}/${chainId}/vault/feeAvg`, {
+        const response = await fetch(`${POSITION_MANAGER_API}?chainId=${chainId}&item=feeAvg`, {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -80,17 +82,17 @@ export const useFetchApr = (timeWindows: number[]): AprData => {
         return []
       }
     },
-    {
-      enabled: supportedChain,
-      refetchOnWindowFocus: false,
-    },
-  )
 
-  const { data: fallbackData, isLoading: isFallbackLoading } = useQuery(
-    ['/fetch-position-manager-apr-specific', chainId],
-    async () => {
+    enabled: supportedChain,
+    refetchOnWindowFocus: false,
+  })
+
+  const { data: fallbackData, isPending: isFallbackLoading } = useQuery({
+    queryKey: ['/fetch-position-manager-apr-fallback', chainId],
+
+    queryFn: async () => {
       try {
-        const response = await fetch(`${POSITION_MANAGER_API}/${chainId}/vault/feeAvg`, {
+        const response = await fetch(`${POSITION_MANAGER_API}?chainId=${chainId}&item=feeAvg`, {
           method: 'POST',
           headers: {
             Accept: 'application/json',
@@ -108,15 +110,15 @@ export const useFetchApr = (timeWindows: number[]): AprData => {
         return []
       }
     },
-    {
-      enabled: supportedChain,
-      refetchOnWindowFocus: false,
-    },
-  )
 
-  const { data: specificData, isLoading: isSpecificLoading } = useQuery(
-    ['/fetch-position-manager-apr-fallback', chainId],
-    async () => {
+    enabled: supportedChain,
+    refetchOnWindowFocus: false,
+  })
+
+  const { data: specificData, isPending: isSpecificLoading } = useQuery({
+    queryKey: ['/fetch-position-manager-apr-specific', chainId],
+
+    queryFn: async () => {
       try {
         const result = await fetchAllSpecificTimeWindow(timeWindows, chainId)
         return result
@@ -125,15 +127,14 @@ export const useFetchApr = (timeWindows: number[]): AprData => {
         return []
       }
     },
-    {
-      enabled: supportedChain,
-      refetchOnWindowFocus: false,
-    },
-  )
+
+    enabled: supportedChain,
+    refetchOnWindowFocus: false,
+  })
 
   return {
     data: data ?? [],
-    isLoading: isLoading || isFallbackLoading || isSpecificLoading,
+    isLoading: isPending || isFallbackLoading || isSpecificLoading,
     refetch,
     fallbackData: fallbackData ?? [],
     specificData: specificData ?? {},

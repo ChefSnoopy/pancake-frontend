@@ -1,6 +1,6 @@
 import { useTranslation } from '@pancakeswap/localization'
 import { Currency, CurrencyAmount, TradeType } from '@pancakeswap/sdk'
-import { SmartRouterTrade } from '@pancakeswap/smart-router/evm'
+import { SmartRouterTrade, V4Router } from '@pancakeswap/smart-router'
 import { Button, useModal } from '@pancakeswap/uikit'
 import { useExpertMode } from '@pancakeswap/utils/user'
 import { CommitButton } from 'components/CommitButton'
@@ -14,45 +14,46 @@ import { useCallback, useEffect, useState } from 'react'
 import { Field } from 'state/swap/actions'
 import { logGTMClickSwapEvent } from 'utils/customGTMEventTracking'
 import { parseMMError } from 'views/Swap/MMLinkPools/utils/exchange'
+import { ConfirmSwapModal } from 'views/Swap/V3Swap/containers/ConfirmSwapModal'
 import { useConfirmModalState } from 'views/Swap/V3Swap/hooks/useConfirmModalState'
-import { SendTransactionResult } from 'wagmi/actions'
-import { ConfirmSwapModal } from '../../V3Swap/containers/ConfirmSwapModal'
 import { useSwapCallArguments } from '../hooks/useSwapCallArguments'
 import { useSwapCallback } from '../hooks/useSwapCallback'
 import { MMRfqTrade } from '../types'
 
 const SettingsModalWithCustomDismiss = withCustomOnDismiss(SettingsModal)
 
-interface SwapCommitButtonPropsType {
+type Trade = SmartRouterTrade<TradeType> | V4Router.V4Trade<TradeType>
+
+interface SwapCommitButtonPropsType<SendTransactionReturnType> {
   swapIsUnsupported: boolean
-  account: string
+  account: string | undefined
   showWrap: boolean
-  wrapInputError: string
-  onWrap: () => Promise<void>
+  wrapInputError: string | undefined
+  onWrap?: () => Promise<void>
   wrapType: WrapType
   approval: ApprovalState
-  approveCallback: () => Promise<SendTransactionResult>
-  revokeCallback: () => Promise<SendTransactionResult>
+  approveCallback: () => Promise<SendTransactionReturnType>
+  revokeCallback: () => Promise<SendTransactionReturnType>
   approvalSubmitted: boolean
   currencies: {
     INPUT?: Currency
     OUTPUT?: Currency
   }
   isExpertMode: boolean
-  rfqTrade: MMRfqTrade
+  rfqTrade: MMRfqTrade<Trade>
   swapInputError: string
   currencyBalances: {
     INPUT?: CurrencyAmount<Currency>
     OUTPUT?: CurrencyAmount<Currency>
   }
-  recipient: string
+  recipient: string | null
   onUserInput: (field: Field, typedValue: string) => void
   mmQuoteExpiryRemainingSec?: number | null
   isPendingError: boolean
-  currentAllowance: CurrencyAmount<Currency>
+  currentAllowance: CurrencyAmount<Currency> | undefined
 }
 
-export function MMSwapCommitButton({
+export function MMSwapCommitButton<SendTransactionReturnType>({
   swapIsUnsupported,
   account,
   showWrap,
@@ -70,7 +71,7 @@ export function MMSwapCommitButton({
   onUserInput,
   isPendingError,
   currentAllowance,
-}: SwapCommitButtonPropsType) {
+}: SwapCommitButtonPropsType<SendTransactionReturnType>) {
   const { chainId } = useActiveChainId()
 
   const [isExpertMode] = useExpertMode()
@@ -88,7 +89,7 @@ export function MMSwapCommitButton({
     swapCalls,
   )
   const [{ tradeToConfirm, swapErrorMessage, attemptingTxn, txHash }, setSwapState] = useState<{
-    tradeToConfirm?: SmartRouterTrade<TradeType>
+    tradeToConfirm?: Trade | null
     attemptingTxn: boolean
     swapErrorMessage: string | undefined
     txHash: string | undefined
@@ -106,10 +107,12 @@ export function MMSwapCommitButton({
     }
     setSwapState({ attemptingTxn: true, tradeToConfirm, swapErrorMessage: undefined, txHash: undefined })
     return swapCallback()
-      .then((hash) => {
-        setSwapState({ attemptingTxn: false, tradeToConfirm, swapErrorMessage: undefined, txHash: hash })
+      .then((result) => {
+        setSwapState({ attemptingTxn: false, tradeToConfirm, swapErrorMessage: undefined, txHash: result.hash })
       })
       .catch((error) => {
+        console.error('handleSwap error', error)
+
         setSwapState({
           attemptingTxn: false,
           tradeToConfirm,
@@ -231,8 +234,13 @@ export function MMSwapCommitButton({
 
   if (showWrap) {
     return (
-      <CommitButton width="100%" disabled={Boolean(wrapInputError)} onClick={onWrap}>
-        {wrapInputError ?? (wrapType === WrapType.WRAP ? 'Wrap' : wrapType === WrapType.UNWRAP ? 'Unwrap' : null)}
+      <CommitButton
+        width="100%"
+        disabled={Boolean(wrapInputError)}
+        onClick={onWrap}
+        data-dd-action-name="Swap wrap button"
+      >
+        {wrapInputError ?? (wrapType === WrapType.WRAP ? t('Wrap') : wrapType === WrapType.UNWRAP ? t('Unwrap') : null)}
       </CommitButton>
     )
   }
@@ -246,6 +254,7 @@ export function MMSwapCommitButton({
       variant="primary"
       disabled={!rfqTrade.rfq || !isValid || !!swapCallbackError}
       onClick={onSwapHandler}
+      data-dd-action-name="Swap mm commit button"
     >
       {parseMMError(swapInputError) || t('Swap')}
     </CommitButton>

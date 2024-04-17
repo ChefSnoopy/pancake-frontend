@@ -1,7 +1,7 @@
 import { v3Clients } from 'utils/graphql'
 import { useActiveChainId } from 'hooks/useActiveChainId'
 import { gql, GraphQLClient } from 'graphql-request'
-import useSWRImmutable from 'swr/immutable'
+import { useQuery } from '@tanstack/react-query'
 
 interface TokenPrice {
   id: string
@@ -30,11 +30,16 @@ const fetchTokenPrice = async (dataClient: GraphQLClient, token0Address: string,
 
 export const useTokenPriceFromSubgraph = (token0Address: string | undefined, token1Address: string | undefined) => {
   const { chainId } = useActiveChainId()
-  const { data } = useSWRImmutable(
-    !!chainId && token0Address && token1Address && [`positonManager${token0Address ?? ''}-${token1Address}`, chainId],
-    () => fetchTokenPrice(v3Clients[chainId ?? -1], token0Address ?? '', token1Address ?? ''),
-    { errorRetryCount: 3, errorRetryInterval: 3000 },
-  )
+  const { data } = useQuery({
+    queryKey: [`positonManager${token0Address ?? ''}-${token1Address}`, chainId],
+    queryFn: () => fetchTokenPrice(v3Clients[chainId ?? -1], token0Address ?? '', token1Address ?? ''),
+    enabled: Boolean(chainId && token0Address && token1Address),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+    retry: 3,
+    retryDelay: 3000,
+  })
   return {
     token0: data?.tokens?.[0]?.derivedUSD ? Number(data.tokens[0].derivedUSD) : 0,
     token1: data?.tokens?.[1]?.derivedUSD ? Number(data.tokens[1].derivedUSD) : 0,

@@ -1,5 +1,47 @@
 # @pancakeswap/sdk
 
+## 5.8.1
+
+### Patch Changes
+
+- 72c834c: Upgrade viem and wagmi v2
+- Updated dependencies [72c834c]
+- Updated dependencies [d4283e5]
+  - @pancakeswap/chains@0.4.2
+
+## 5.8.0
+
+### Minor Changes
+
+- 610a24a: Introduce v4 router with faster quoting speed
+
+### Patch Changes
+
+- Updated dependencies [610a24a]
+  - @pancakeswap/swap-sdk-core@1.1.0
+
+## 5.7.7
+
+### Patch Changes
+
+- Updated dependencies [c269d43]
+  - @pancakeswap/swap-sdk-core@1.0.1
+
+## 5.7.6
+
+### Patch Changes
+
+- 91969f80f: Add sepolia, base sepolia, arbitrum sepolia support
+- Updated dependencies [91969f80f]
+  - @pancakeswap/chains@0.4.1
+
+## 5.7.5
+
+### Patch Changes
+
+- Updated dependencies [8fcd67c85]
+  - @pancakeswap/chains@0.4.0
+
 ## 5.7.4
 
 ### Patch Changes

@@ -1,5 +1,209 @@
 # @pancakeswap/farms
 
+## 1.0.54
+
+### Patch Changes
+
+- 72c834c: Upgrade viem and wagmi v2
+- Updated dependencies [72c834c]
+- Updated dependencies [d4283e5]
+  - @pancakeswap/sdk@5.8.1
+  - @pancakeswap/chains@0.4.2
+  - @pancakeswap/v3-sdk@3.8.1
+  - @pancakeswap/utils@6.0.4
+  - @pancakeswap/price-api-sdk@1.2.1
+  - @pancakeswap/tokens@0.6.12
+  - @pancakeswap/token-lists@0.0.11
+
+## 1.0.53
+
+### Patch Changes
+
+- Updated dependencies [03bd2a9]
+  - @pancakeswap/price-api-sdk@1.2.0
+
+## 1.0.52
+
+### Patch Changes
+
+- @pancakeswap/price-api-sdk@1.1.1
+
+## 1.0.51
+
+### Patch Changes
+
+- Updated dependencies [94fdd2a]
+  - @pancakeswap/price-api-sdk@1.1.0
+
+## 1.0.50
+
+### Patch Changes
+
+- Updated dependencies [4a296c0]
+  - @pancakeswap/price-api-sdk@1.0.1
+
+## 1.0.49
+
+### Patch Changes
+
+- dd5b38f: Introduce price api sdk
+- Updated dependencies [dd5b38f]
+  - @pancakeswap/price-api-sdk@1.0.0
+
+## 1.0.48
+
+### Patch Changes
+
+- Updated dependencies [30ef48c]
+  - @pancakeswap/tokens@0.6.11
+
+## 1.0.47
+
+### Patch Changes
+
+- Updated dependencies [67ca3d6]
+  - @pancakeswap/v3-sdk@3.8.0
+
+## 1.0.46
+
+### Patch Changes
+
+- d7586b8: Update farms, pools, gauges, tokens
+- Updated dependencies [d7586b8]
+  - @pancakeswap/tokens@0.6.10
+
+## 1.0.45
+
+### Patch Changes
+
+- e26505f: List new pool, farm, token and gauges
+- Updated dependencies [e26505f]
+  - @pancakeswap/tokens@0.6.9
+
+## 1.0.44
+
+### Patch Changes
+
+- Updated dependencies [928b9a8]
+  - @pancakeswap/tokens@0.6.8
+
+## 1.0.43
+
+### Patch Changes
+
+- Updated dependencies [acc454d]
+  - @pancakeswap/v3-sdk@3.7.13
+
+## 1.0.42
+
+### Patch Changes
+
+- Updated dependencies [610a24a]
+  - @pancakeswap/sdk@5.8.0
+  - @pancakeswap/swap-sdk-core@1.1.0
+  - @pancakeswap/v3-sdk@3.7.12
+  - @pancakeswap/tokens@0.6.7
+  - @pancakeswap/utils@6.0.3
+  - @pancakeswap/token-lists@0.0.11
+
+## 1.0.41
+
+### Patch Changes
+
+- Updated dependencies [c269d43]
+  - @pancakeswap/swap-sdk-core@1.0.1
+  - @pancakeswap/sdk@5.7.7
+  - @pancakeswap/token-lists@0.0.10
+  - @pancakeswap/utils@6.0.2
+  - @pancakeswap/v3-sdk@3.7.11
+  - @pancakeswap/tokens@0.6.6
+
+## 1.0.40
+
+### Patch Changes
+
+- Updated dependencies [6157db8]
+  - @pancakeswap/tokens@0.6.5
+
+## 1.0.39
+
+### Patch Changes
+
+- Updated dependencies [82f61f9]
+  - @pancakeswap/tokens@0.6.4
+
+## 1.0.38
+
+### Patch Changes
+
+- Updated dependencies [b8f0acb]
+  - @pancakeswap/v3-sdk@3.7.10
+
+## 1.0.37
+
+### Patch Changes
+
+- Updated dependencies [a8ffc15]
+  - @pancakeswap/tokens@0.6.3
+  - @pancakeswap/v3-sdk@3.7.9
+
+## 1.0.36
+
+### Patch Changes
+
+- Updated dependencies [91969f80f]
+  - @pancakeswap/sdk@5.7.6
+  - @pancakeswap/chains@0.4.1
+  - @pancakeswap/tokens@0.6.2
+  - @pancakeswap/v3-sdk@3.7.8
+  - @pancakeswap/utils@6.0.1
+  - @pancakeswap/token-lists@0.0.9
+
+## 1.0.35
+
+### Patch Changes
+
+- Updated dependencies [a270af13a]
+  - @pancakeswap/v3-sdk@3.7.7
+
+## 1.0.34
+
+### Patch Changes
+
+- Updated dependencies [48ac84692]
+  - @pancakeswap/tokens@0.6.1
+  - @pancakeswap/v3-sdk@3.7.6
+
+## 1.0.33
+
+### Patch Changes
+
+- Updated dependencies [205c08713]
+  - @pancakeswap/tokens@0.6.0
+  - @pancakeswap/v3-sdk@3.7.5
+
+## 1.0.32
+
+### Patch Changes
+
+- Updated dependencies [ec7e469ca]
+  - @pancakeswap/utils@6.0.0
+  - @pancakeswap/token-lists@0.0.9
+  - @pancakeswap/tokens@0.5.8
+  - @pancakeswap/v3-sdk@3.7.4
+
+## 1.0.31
+
+### Patch Changes
+
+- Updated dependencies [8fcd67c85]
+  - @pancakeswap/chains@0.4.0
+  - @pancakeswap/sdk@5.7.5
+  - @pancakeswap/tokens@0.5.8
+  - @pancakeswap/utils@5.0.8
+  - @pancakeswap/v3-sdk@3.7.4
+  - @pancakeswap/token-lists@0.0.9
+
 ## 1.0.30
 
 ### Patch Changes

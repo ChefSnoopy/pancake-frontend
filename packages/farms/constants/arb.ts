@@ -1,14 +1,30 @@
 import { arbitrumTokens } from '@pancakeswap/tokens'
 import { FeeAmount } from '@pancakeswap/v3-sdk'
+import { getAddress } from 'viem'
 import { defineFarmV3Configs } from '../src/defineFarmV3Configs'
+import { FarmConfigV3, SerializedFarmConfig } from '../src/types'
 
-export const farmsV3 = defineFarmV3Configs([
+const v3TopFixedLps: FarmConfigV3[] = [
   {
-    pid: 32,
-    lpAddress: '0xf0B860d338E8B5199606322653B83A166d96E417',
-    token0: arbitrumTokens.xai,
-    token1: arbitrumTokens.weth,
-    feeAmount: FeeAmount.MEDIUM,
+    pid: 43,
+    lpAddress: '0x389938CF14Be379217570D8e4619E51fBDafaa21',
+    token0: arbitrumTokens.weth,
+    token1: arbitrumTokens.usdt,
+    feeAmount: FeeAmount.LOWEST,
+  },
+  {
+    pid: 42,
+    lpAddress: '0x7fCDC35463E3770c2fB992716Cd070B63540b947',
+    token0: arbitrumTokens.weth,
+    token1: arbitrumTokens.usdc,
+    feeAmount: FeeAmount.LOWEST,
+  },
+  {
+    pid: 2,
+    lpAddress: '0x0BaCc7a9717e70EA0DA5Ac075889Bd87d4C81197',
+    token0: arbitrumTokens.weth,
+    token1: arbitrumTokens.usdt,
+    feeAmount: FeeAmount.LOW,
   },
   {
     pid: 1,
@@ -17,12 +33,79 @@ export const farmsV3 = defineFarmV3Configs([
     token1: arbitrumTokens.usdc,
     feeAmount: FeeAmount.LOW,
   },
+]
+
+export const farmsV3 = defineFarmV3Configs([
+  ...v3TopFixedLps,
   {
-    pid: 2,
-    lpAddress: '0x0BaCc7a9717e70EA0DA5Ac075889Bd87d4C81197',
-    token0: arbitrumTokens.weth,
-    token1: arbitrumTokens.usdt,
+    pid: 41,
+    lpAddress: '0x35D85D531BE7159cB6f92E8B9CeaF04eC28c6ad9',
+    token0: arbitrumTokens.usdv,
+    token1: arbitrumTokens.usdplus,
+    feeAmount: FeeAmount.LOWEST,
+  },
+  {
+    pid: 40,
+    lpAddress: '0x8a06339Abd7499Af755DF585738ebf43D5D62B94',
+    token0: arbitrumTokens.usdtplus,
+    token1: arbitrumTokens.usdplus,
     feeAmount: FeeAmount.LOW,
+  },
+  {
+    pid: 39,
+    lpAddress: '0x721F37495cD70383B0A77Bf1eB8f97eef29498Bb',
+    token0: arbitrumTokens.usdc,
+    token1: arbitrumTokens.usdplus,
+    feeAmount: FeeAmount.LOW,
+  },
+  {
+    pid: 38,
+    lpAddress: '0x753bA05488Cac9B3f7D59Ff7D3f13F31bB5eDf22',
+    token0: arbitrumTokens.weth,
+    token1: arbitrumTokens.wbnb,
+    feeAmount: FeeAmount.MEDIUM,
+  },
+  {
+    pid: 37,
+    lpAddress: '0x714D48cb99b87F274B33A89fBb16EaD191B40b6C',
+    token0: arbitrumTokens.ovn,
+    token1: arbitrumTokens.usdplus,
+    feeAmount: FeeAmount.HIGH,
+  },
+  {
+    pid: 36,
+    lpAddress: '0xdAA80a051E22A7f7b0cfC33Aa29572fbDE65183E',
+    token0: arbitrumTokens.weth,
+    token1: arbitrumTokens.ethplus,
+    feeAmount: FeeAmount.LOWEST,
+  },
+  {
+    pid: 35,
+    lpAddress: '0xd01075f7314a6436e8B74fc18069848229D0c555',
+    token0: arbitrumTokens.usdplus,
+    token1: arbitrumTokens.usdce,
+    feeAmount: FeeAmount.LOWEST,
+  },
+  {
+    pid: 34,
+    lpAddress: '0x06c75011479E47280e8B7E72E9e0315C8b3A634d',
+    token0: arbitrumTokens.ethplus,
+    token1: arbitrumTokens.usdplus,
+    feeAmount: FeeAmount.MEDIUM,
+  },
+  {
+    pid: 33,
+    lpAddress: '0xb9c2d906f94b27bC403Ab76B611D2C4490c2ae3F',
+    token0: arbitrumTokens.usdtplus,
+    token1: arbitrumTokens.usdplus,
+    feeAmount: FeeAmount.LOWEST,
+  },
+  {
+    pid: 32,
+    lpAddress: '0xf0B860d338E8B5199606322653B83A166d96E417',
+    token0: arbitrumTokens.xai,
+    token1: arbitrumTokens.weth,
+    feeAmount: FeeAmount.MEDIUM,
   },
   {
     pid: 3,
@@ -228,3 +311,41 @@ export const farmsV3 = defineFarmV3Configs([
     feeAmount: FeeAmount.LOWEST,
   },
 ])
+
+const farms: SerializedFarmConfig[] = [
+  {
+    pid: 2,
+    lpSymbol: 'mDLP-DLP LP',
+    lpAddress: '0x0db5e247ab73FBaE16d9301f2977f974EC0AA336',
+    token: arbitrumTokens.mdlp,
+    quoteToken: arbitrumTokens.dlp,
+    stableSwapAddress: '0xd0f0be815a76eFE677c92b07b39a5e972BAf22bD',
+    infoStableSwapAddress: '0x58B2F00f74a1877510Ec37b22f116Bf5D63Ab1b0',
+    stableLpFee: 0.00125,
+    stableLpFeeRateOfTotalFee: 0.5,
+    bCakeWrapperAddress: '0xC6B6926ef8B7218F054d64B52Ac455aEd22D690B',
+    allocPoint: 1,
+  },
+  {
+    pid: 178,
+    lpSymbol: 'mPENDLE-PENDLE LP',
+    lpAddress: '0x1A2329546f11e4fE55b853D98Bba2c4678E3105A',
+    token: arbitrumTokens.mpendle,
+    quoteToken: arbitrumTokens.pendle,
+    stableSwapAddress: '0x73ed25e04Aa673ddf7411441098fC5ae19976CE0',
+    infoStableSwapAddress: '0x58B2F00f74a1877510Ec37b22f116Bf5D63Ab1b0',
+    stableLpFee: 0.00125,
+    stableLpFeeRateOfTotalFee: 0.5,
+    bCakeWrapperAddress: '0x7Fa4536b3E78643E027Dc34bB5A055517B4D9096',
+    allocPoint: 1,
+  },
+].map(
+  (p) =>
+    ({
+      ...p,
+      token: p.token.serialize,
+      quoteToken: p.quoteToken.serialize,
+      lpAddress: p.lpAddress ? getAddress(p.lpAddress) : '0x',
+    } as SerializedFarmConfig),
+)
+export default farms

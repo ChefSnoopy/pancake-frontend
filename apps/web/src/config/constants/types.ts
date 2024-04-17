@@ -1,9 +1,9 @@
 import { ChainId } from '@pancakeswap/chains'
-import type { FarmConfigBaseProps, SerializedFarmConfig } from '@pancakeswap/farms'
-import { Currency, CurrencyAmount, Percent, Price, Token, Trade, TradeType } from '@pancakeswap/sdk'
+import type { FarmConfigBaseProps, SerializedFarmConfig, SerializedFarmPublicData } from '@pancakeswap/farms'
+import { Currency, CurrencyAmount, ERC20Token, Percent, Price, Token, Trade, TradeType } from '@pancakeswap/sdk'
 import { LegacyTradeWithStableSwap as TradeWithStableSwap } from '@pancakeswap/smart-router/legacy-router'
 import BigNumber from 'bignumber.js'
-import { Address } from 'wagmi'
+import { Address } from 'viem'
 
 // a list of tokens by chain
 export type ChainMap<T> = {
@@ -32,7 +32,7 @@ export enum PoolCategory {
   'AUTO' = 'Auto',
 }
 
-export type { FarmConfigBaseProps, SerializedFarmConfig }
+export type { FarmConfigBaseProps, SerializedFarmConfig, SerializedFarmPublicData }
 
 export type Images = {
   lg: string
@@ -151,7 +151,7 @@ export interface ConnectedBidder {
 
 export const FetchStatus = {
   Idle: 'idle',
-  Fetching: 'loading',
+  Fetching: 'pending',
   Fetched: 'success',
   Failed: 'error',
 } as const
@@ -187,3 +187,5 @@ export enum Bound {
   LOWER = 'LOWER',
   UPPER = 'UPPER',
 }
+
+export type UnsafeCurrency = Currency | ERC20Token | null | undefined

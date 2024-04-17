@@ -1,5 +1,52 @@
 # @pancakeswap/utils
 
+## 6.0.4
+
+### Patch Changes
+
+- 72c834c: Upgrade viem and wagmi v2
+- Updated dependencies [72c834c]
+- Updated dependencies [d4283e5]
+  - @pancakeswap/chains@0.4.2
+
+## 6.0.3
+
+### Patch Changes
+
+- @pancakeswap/localization@6.0.3
+
+## 6.0.2
+
+### Patch Changes
+
+- @pancakeswap/localization@6.0.2
+
+## 6.0.1
+
+### Patch Changes
+
+- Updated dependencies [91969f80f]
+  - @pancakeswap/chains@0.4.1
+  - @pancakeswap/localization@6.0.1
+
+## 6.0.0
+
+### Minor Changes
+
+- ec7e469ca: Add support for abort control
+
+### Patch Changes
+
+- @pancakeswap/localization@6.0.0
+
+## 5.0.8
+
+### Patch Changes
+
+- Updated dependencies [8fcd67c85]
+  - @pancakeswap/chains@0.4.0
+  - @pancakeswap/localization@5.0.8
+
 ## 5.0.7
 
 ### Patch Changes

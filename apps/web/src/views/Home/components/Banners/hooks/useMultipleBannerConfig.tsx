@@ -4,10 +4,15 @@ import { ReactElement, useMemo } from 'react'
 import CompetitionBanner from '../CompetitionBanner'
 import { GalxeTraverseBanner } from '../GalxeTraverseBanner'
 import GameBanner from '../GameBanner'
+import { MultiChainBanner } from '../MultichainBanner'
+import { NemesisDownfallBanner } from '../NemesisDownfallBanner'
 import NewIFOBanner from '../NewIFOBanner'
+import { OptionsBanner } from '../OptionsBanner'
 import PerpetualBanner from '../PerpetualBanner'
+import { TopTraderBanner } from '../TopTraderBanner'
 import UserBanner from '../UserBanner'
-import VeCakeBanner from '../VeCakeBanner'
+import { V4InfoBanner } from '../V4InfoBanner'
+import { VeCakeBanner } from '../VeCakeBanner'
 import WebNotificationBanner from '../WebNotificationBanner'
 import useIsRenderCompetitionBanner from './useIsRenderCompetitionBanner'
 import useIsRenderIfoBanner from './useIsRenderIFOBanner'
@@ -43,13 +48,33 @@ export const useMultipleBannerConfig = () => {
         banner: <UserBanner />,
       },
       { shouldRender: isRenderIFOBanner || Boolean(countdown), banner: <NewIFOBanner /> },
-      { shouldRender: true, banner: <GalxeTraverseBanner /> },
-      { shouldRender: true, banner: <WebNotificationBanner /> },
+      {
+        shouldRender: true,
+        banner: <MultiChainBanner />,
+      },
+      {
+        shouldRender: true,
+        banner: <OptionsBanner />,
+      },
       { shouldRender: true, banner: <VeCakeBanner /> },
-      { shouldRender: true, banner: <GameBanner /> },
+      {
+        shouldRender: true,
+        banner: <V4InfoBanner />,
+      },
+      {
+        shouldRender: true,
+        banner: <NemesisDownfallBanner />,
+      },
+      {
+        shouldRender: true,
+        banner: <TopTraderBanner />,
+      },
     ]
 
     const SHUFFLE_BANNERS: IBannerConfig[] = [
+      { shouldRender: true, banner: <GalxeTraverseBanner /> },
+      { shouldRender: true, banner: <WebNotificationBanner /> },
+      { shouldRender: true, banner: <GameBanner /> },
       {
         shouldRender: isRenderCompetitionBanner,
         banner: <CompetitionBanner />,

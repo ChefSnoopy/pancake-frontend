@@ -1,10 +1,11 @@
-import chunk from 'lodash/chunk'
 import { ChainId } from '@pancakeswap/chains'
-import { masterChefV2ABI } from 'config/abi/masterchefV2'
-import { publicClient } from 'utils/wagmi'
-import { farmFetcher } from 'state/farms'
-import { ContractFunctionResult } from 'viem'
 import { SerializedFarm } from '@pancakeswap/farms'
+import { masterChefV2ABI } from 'config/abi/masterchefV2'
+import chunk from 'lodash/chunk'
+import { farmFetcher } from 'state/farms'
+import { notEmpty } from 'utils/notEmpty'
+import { publicClient } from 'utils/wagmi'
+import { AbiStateMutability, ContractFunctionReturnType } from 'viem'
 import { SerializedFarmConfig } from '../../config/constants/types'
 import { getMasterChefV2Address } from '../../utils/addressHelpers'
 
@@ -47,8 +48,12 @@ const masterChefFarmCalls = (farm: SerializedFarm) => {
     : ([null, null] as const)
 }
 
-export type PoolInfo = ContractFunctionResult<typeof masterChefV2ABI, 'poolInfo'>
-export type TotalRegularAllocPoint = ContractFunctionResult<typeof masterChefV2ABI, 'totalRegularAllocPoint'>
+export type PoolInfo = ContractFunctionReturnType<typeof masterChefV2ABI, AbiStateMutability, 'poolInfo'>
+export type TotalRegularAllocPoint = ContractFunctionReturnType<
+  typeof masterChefV2ABI,
+  AbiStateMutability,
+  'totalRegularAllocPoint'
+>
 
 export const fetchMasterChefData = async (
   farms: SerializedFarmConfig[],
@@ -59,6 +64,7 @@ export const fetchMasterChefData = async (
   const masterChefAggregatedCalls = masterChefCalls
     .filter((masterChefCall) => masterChefCall[0] !== null && masterChefCall[1] !== null)
     .flat()
+    .filter(notEmpty)
 
   const multiCallChainId = farmFetcher.isTestnet(chainId) ? ChainId.BSC_TESTNET : ChainId.BSC
   const client = publicClient({ chainId: multiCallChainId })

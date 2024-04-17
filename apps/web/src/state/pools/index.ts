@@ -25,6 +25,7 @@ import {
 import { bscTokens } from '@pancakeswap/tokens'
 import { BIG_ZERO } from '@pancakeswap/utils/bigNumber'
 import { getBalanceNumber } from '@pancakeswap/utils/formatBalance'
+import { getCurrencyUsdPrice } from '@pancakeswap/price-api-sdk'
 import { PayloadAction, createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit'
 import BigNumber from 'bignumber.js'
 import keyBy from 'lodash/keyBy'
@@ -45,10 +46,9 @@ import {
 } from 'state/types'
 import { safeGetAddress } from 'utils'
 import { fetchTokenAplPrice, isAlpToken } from 'utils/fetchTokenAplPrice'
-import { fetchTokenUSDValue } from 'utils/llamaPrice'
 import { getViemClients } from 'utils/viem'
 import { publicClient } from 'utils/wagmi'
-import { Address, erc20ABI } from 'wagmi'
+import { Address, erc20Abi } from 'viem'
 
 import fetchFarms from '../farms/fetchFarms'
 import { nativeStableLpMap } from '../farms/getFarmsPrices'
@@ -120,13 +120,13 @@ export const fetchCakePoolUserDataAsync =
     const [allowance, stakingTokenBalance] = await client.multicall({
       contracts: [
         {
-          abi: erc20ABI,
+          abi: erc20Abi,
           address: bscTokens.cake.address,
           functionName: 'allowance',
           args: [account as Address, getCakeVaultAddress(chainId)],
         },
         {
-          abi: erc20ABI,
+          abi: erc20Abi,
           address: bscTokens.cake.address,
           functionName: 'balanceOf',
           args: [account as Address],
@@ -217,8 +217,7 @@ export const fetchPoolsPublicDataAsync = (chainId: number) => async (dispatch, g
           stakingTokenPrice = await fetchTokenAplPrice()
         } else {
           // eslint-disable-next-line no-await-in-loop
-          const result = await fetchTokenUSDValue(chainId, [stakingTokenAddress])
-          stakingTokenPrice = result.get(stakingTokenAddress) || 0
+          stakingTokenPrice = await getCurrencyUsdPrice({ chainId, address: stakingTokenAddress })
         }
       }
 
@@ -226,8 +225,7 @@ export const fetchPoolsPublicDataAsync = (chainId: number) => async (dispatch, g
       let earningTokenPrice = earningTokenAddress ? prices[earningTokenAddress] : 0
       if (earningTokenAddress && !prices[earningTokenAddress] && !isPoolFinished) {
         // eslint-disable-next-line no-await-in-loop
-        const result = await fetchTokenUSDValue(chainId, [earningTokenAddress])
-        earningTokenPrice = result.get(earningTokenAddress) || 0
+        earningTokenPrice = await getCurrencyUsdPrice({ chainId, address: earningTokenAddress })
       }
       const totalStaked = getBalanceNumber(new BigNumber(totalStaking.totalStaked), pool.stakingToken.decimals)
       const apr = !isPoolFinished

@@ -4,8 +4,10 @@ import {
   Chain,
   arbitrum,
   arbitrumGoerli,
+  arbitrumSepolia,
   base,
   baseGoerli,
+  baseSepolia,
   bscTestnet,
   bsc as bsc_,
   goerli,
@@ -17,8 +19,8 @@ import {
   polygonZkEvm,
   polygonZkEvmTestnet,
   scrollSepolia,
+  sepolia,
   zkSync,
-  zkSyncTestnet,
 } from 'wagmi/chains'
 
 export const CHAIN_QUERY_NAME = chainNames
@@ -40,7 +42,7 @@ const bsc = {
   rpcUrls: {
     ...bsc_.rpcUrls,
     public: {
-      ...bsc_.rpcUrls.public,
+      ...bsc_.rpcUrls,
       http: ['https://bsc-dataseed.binance.org/'],
     },
     default: {
@@ -67,25 +69,27 @@ export const L2_CHAIN_IDS: ChainId[] = [
   ChainId.BASE_TESTNET,
   ChainId.OPBNB,
   ChainId.OPBNB_TESTNET,
+  ChainId.ARBITRUM_SEPOLIA,
+  ChainId.BASE_SEPOLIA,
 ]
 
-export const CHAINS = [
+export const CHAINS: [Chain, ...Chain[]] = [
   bsc,
-  mainnet,
   bscTestnet,
+  mainnet,
   goerli,
+  sepolia,
   polygonZkEvm,
   polygonZkEvmTestnet,
   zkSync,
-  zkSyncTestnet,
   arbitrum,
   arbitrumGoerli,
+  arbitrumSepolia,
   linea,
   lineaTestnet,
-  arbitrumGoerli,
-  arbitrum,
   base,
   baseGoerli,
+  baseSepolia,
   opBNB,
   opBNBTestnet,
   scrollSepolia,

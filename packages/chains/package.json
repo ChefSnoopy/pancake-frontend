@@ -1,7 +1,7 @@
 {
   "name": "@pancakeswap/chains",
   "license": "MIT",
-  "version": "0.3.1",
+  "version": "0.4.2",
   "description": "The single source of truth for Pancakeswap chain-related information",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -29,9 +29,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest --run --globals",
-    "prepublishOnly": "pnpm run build",
-    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+    "test": "vitest --run",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "update:snapshot": "vitest -u"
   },
   "engines": {
     "node": ">=10"

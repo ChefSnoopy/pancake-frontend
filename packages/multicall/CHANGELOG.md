@@ -1,5 +1,54 @@
 # @pancakeswap/multicall
 
+## 3.5.1
+
+### Patch Changes
+
+- 72c834c: Upgrade viem and wagmi v2
+- Updated dependencies [72c834c]
+- Updated dependencies [d4283e5]
+  - @pancakeswap/sdk@5.8.1
+  - @pancakeswap/chains@0.4.2
+
+## 3.5.0
+
+### Minor Changes
+
+- 610a24a: Introduce v4 router with faster quoting speed
+
+### Patch Changes
+
+- Updated dependencies [610a24a]
+  - @pancakeswap/sdk@5.8.0
+
+## 3.4.2
+
+### Patch Changes
+
+- @pancakeswap/sdk@5.7.7
+
+## 3.4.1
+
+### Patch Changes
+
+- Updated dependencies [91969f80f]
+  - @pancakeswap/sdk@5.7.6
+  - @pancakeswap/chains@0.4.1
+
+## 3.4.0
+
+### Minor Changes
+
+- ec7e469ca: Add support for abort control
+
+## 3.3.4
+
+### Patch Changes
+
+- Updated dependencies [8fcd67c85]
+  - @pancakeswap/chains@0.4.0
+  - @pancakeswap/sdk@5.7.5
+
 ## 3.3.3
 
 ### Patch Changes

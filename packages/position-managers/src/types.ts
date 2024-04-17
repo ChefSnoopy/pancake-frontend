@@ -17,6 +17,8 @@ export enum Strategy {
   PASSIVE,
   PEGGED,
   ALO,
+  ASCEND,
+  SAVINGS,
 }
 
 export interface OnChainActionResponse {
@@ -121,12 +123,13 @@ export interface DuoTokenVault {
   learnMoreUrl?: string
   learnMoreAboutUrl?: string
   aprTimeWindow?: number
+  bCakeWrapperAddress?: Address
+  minDepositUSD?: number
 }
 
 export interface PCSDuoTokenVault extends DuoTokenVault {
   address: Address
   autoCompound?: boolean
-
   // Auto farm with lp
   autoFarm?: boolean
 }
@@ -135,6 +138,7 @@ export type Vault = PCSDuoTokenVault
 
 export interface PCSDuoTokenVaultConfig extends Omit<PCSDuoTokenVault, 'manager'> {
   manager: MANAGER
+  vaultAddress: Address
 }
 
 export type VaultConfig = PCSDuoTokenVaultConfig

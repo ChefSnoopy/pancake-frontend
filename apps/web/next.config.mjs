@@ -6,6 +6,9 @@ import { withSentryConfig } from '@sentry/nextjs'
 import { createVanillaExtractPlugin } from '@vanilla-extract/next-plugin'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import vercelToolbarPlugin from '@vercel/toolbar/plugins/next'
+
+const withVercelToolbar = vercelToolbarPlugin()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -41,17 +44,19 @@ const workerDeps = Object.keys(smartRouterPkgs.dependencies)
 /** @type {import('next').NextConfig} */
 const config = {
   typescript: {
-    tsconfigPath: 'tsconfig.build.json',
+    tsconfigPath: 'tsconfig.json',
   },
   compiler: {
     styledComponents: true,
   },
   experimental: {
     scrollRestoration: true,
+    fallbackNodePolyfills: false,
     outputFileTracingRoot: path.join(__dirname, '../../'),
     outputFileTracingExcludes: {
       '*': [],
     },
+    optimizePackageImports: ['@pancakeswap/widgets-internal', '@pancakeswap/uikit'],
   },
   transpilePackages: [
     '@pancakeswap/farms',
@@ -60,8 +65,9 @@ const config = {
     '@pancakeswap/hooks',
     '@pancakeswap/utils',
     '@pancakeswap/widgets-internal',
+    '@pancakeswap/universal-router-sdk',
+    '@pancakeswap/permit2-sdk',
     '@pancakeswap/ifos',
-    '@pancakeswap/gauges',
   ],
   reactStrictMode: true,
   swcMinify: true,
@@ -84,6 +90,10 @@ const config = {
       {
         source: '/info/pool/:address',
         destination: '/info/pools/:address',
+      },
+      {
+        source: '/.well-known/vercel/flags',
+        destination: '/api/vercel/flags',
       },
     ]
   },
@@ -132,11 +142,6 @@ const config = {
       {
         source: '/send',
         destination: '/swap',
-        permanent: true,
-      },
-      {
-        source: '/swap/:outputCurrency',
-        destination: '/swap?outputCurrency=:outputCurrency',
         permanent: true,
       },
       {
@@ -218,6 +223,6 @@ const config = {
   },
 }
 
-export default withBundleAnalyzer(
-  withVanillaExtract(withSentryConfig(withWebSecurityHeaders(config)), sentryWebpackPluginOptions),
+export default withVercelToolbar(
+  withBundleAnalyzer(withVanillaExtract(withSentryConfig(withWebSecurityHeaders(config)), sentryWebpackPluginOptions)),
 )

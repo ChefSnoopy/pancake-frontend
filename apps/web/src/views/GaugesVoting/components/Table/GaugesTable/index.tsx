@@ -2,7 +2,7 @@ import { Gauge } from '@pancakeswap/gauges'
 import { AutoColumn, Skeleton } from '@pancakeswap/uikit'
 import orderBy from 'lodash/orderBy'
 import uniqBy from 'lodash/uniqBy'
-import { useCallback, useMemo, useState } from 'react'
+import React, { ReactNode, useCallback, useMemo, useState } from 'react'
 import { FixedSizeList } from 'react-window'
 import styled from 'styled-components'
 import { SpaceProps, space } from 'styled-system'
@@ -46,20 +46,23 @@ export const GaugesTable: React.FC<
     setSortBy(by)
   }
 
-  const Row = ({ data: rows, index, style }): JSX.Element => {
-    const row = rows[index]
-    return (
-      <TableRow
-        style={style}
-        data={row}
-        locked={selectRows?.find((r) => r.hash === row.hash)?.locked}
-        selectable={selectable}
-        selected={selectRows?.some((r) => r.hash === row.hash)}
-        onSelect={onRowSelect}
-        totalGaugesWeight={totalGaugesWeight}
-      />
-    )
-  }
+  const Row = useCallback(
+    ({ data: rows, index, style }): ReactNode => {
+      const row = rows[index]
+      return (
+        <TableRow
+          style={style}
+          data={row}
+          locked={selectRows?.find((r) => r.hash === row.hash)?.locked}
+          selectable={selectable}
+          selected={selectRows?.some((r) => r.hash === row.hash)}
+          onSelect={onRowSelect}
+          totalGaugesWeight={totalGaugesWeight}
+        />
+      )
+    },
+    [onRowSelect, selectRows, selectable, totalGaugesWeight],
+  )
 
   const itemKey = useCallback((index: number, row: Gauge[]) => row[index].hash, [])
   const expandHeight = useMemo(

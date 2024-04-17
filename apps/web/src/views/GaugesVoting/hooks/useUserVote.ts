@@ -45,9 +45,10 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
   const currentTimestamp = useCurrentBlockTimestamp()
   const nextEpochStart = useNextEpochStart()
 
-  const { data } = useQuery(
-    ['/vecake/userVoteSlopes', contract.address, gauge?.hash, account],
-    async (): Promise<VotedSlope> => {
+  const { data } = useQuery({
+    queryKey: ['/vecake/userVoteSlopes', contract.address, gauge?.hash, account],
+
+    queryFn: async (): Promise<VotedSlope> => {
       const hasProxy = useProxyPool && userInfo?.cakePoolProxy && !isAddressEqual(userInfo?.cakePoolProxy, zeroAddress)
       const calls = [
         {
@@ -75,10 +76,13 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
         ...calls,
       ] as const
       if (hasProxy) {
-        const response = await publicClient.multicall({
-          contracts: callsWithProxy,
-          allowFailure: false,
-        })
+        const response = publicClient
+          ? await publicClient.multicall({
+              contracts: callsWithProxy,
+              allowFailure: false,
+            })
+          : []
+
         const [
           [_proxySlope, _proxyPower, proxyEnd],
           proxyLastVoteTime,
@@ -97,9 +101,12 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
         let ignoredSlope = 0n
         let ignoredPower = 0n
         let ignoredSide: 'native' | 'proxy' | undefined
+        const nativeExpired = nativeEnd > 0n && nativeEnd < nextEpochStart
+        const proxyExpired = proxyEnd > 0n && proxyEnd < nextEpochStart
+
         // when native slope will expire before current epochEnd
         // use proxy slope only
-        if (nativeEnd < nextEpochStart && proxyEnd > nextEpochStart) {
+        if (nativeExpired && !proxyExpired) {
           ignoredSlope = nativeSlope
           ignoredPower = nativePower
           ignoredSide = 'native'
@@ -108,7 +115,7 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
         }
         // when proxy slope will expire before current epochEnd
         // use native slope only
-        if (proxyEnd < nextEpochStart && nativeEnd > nextEpochStart) {
+        if (proxyExpired && !nativeExpired) {
           ignoredSlope = proxySlope
           ignoredPower = proxyPower
           ignoredSide = 'proxy'
@@ -118,7 +125,7 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
 
         // when both slopes will expire before current epochEnd
         // use max of both slopes
-        if (nativeEnd < nextEpochStart && proxyEnd < nextEpochStart) {
+        if (nativeExpired && proxyExpired) {
           const nativeWeight = _nativeSlope * (nativeEnd - BigInt(currentTimestamp))
           const proxyWeight = _proxySlope * (proxyEnd - BigInt(currentTimestamp))
           if (nativeWeight > proxyWeight) {
@@ -159,10 +166,12 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
           ignoredSide,
         }
       }
-      const response = await publicClient.multicall({
-        contracts: calls,
-        allowFailure: false,
-      })
+      const response = publicClient
+        ? await publicClient.multicall({
+            contracts: calls,
+            allowFailure: false,
+          })
+        : []
       const [[nativeSlope, nativePower, nativeEnd], lastVoteTime] = response
       const voteLocked = dayjs.unix(Number(lastVoteTime)).add(10, 'day').isAfter(dayjs.unix(currentTimestamp))
 
@@ -181,9 +190,8 @@ export const useUserVote = (gauge?: Gauge, useProxyPool: boolean = true) => {
         voteLocked,
       }
     },
-    {
-      enabled: !!account && Boolean(gauge?.hash),
-    },
-  )
+
+    enabled: !!account && Boolean(gauge?.hash),
+  })
   return data
 }

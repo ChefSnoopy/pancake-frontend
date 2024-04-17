@@ -1,62 +1,49 @@
-import { Pair, ERC20Token } from '@pancakeswap/sdk'
 import { ChainId } from '@pancakeswap/chains'
-import { deserializeToken } from '@pancakeswap/token-lists'
-import flatMap from 'lodash/flatMap'
 import { getFarmConfig } from '@pancakeswap/farms/constants'
-import { useCallback, useMemo } from 'react'
-import { useSelector } from 'react-redux'
+import { ERC20Token, Pair } from '@pancakeswap/sdk'
+import { deserializeToken } from '@pancakeswap/token-lists'
+import { useQuery } from '@tanstack/react-query'
 import { BASES_TO_TRACK_LIQUIDITY_FOR, PINNED_PAIRS } from 'config/constants/exchange'
-import useSWRImmutable from 'swr/immutable'
 import { useOfficialsAndUserAddedTokens } from 'hooks/Tokens'
-import useSWR from 'swr'
 import { useActiveChainId } from 'hooks/useActiveChainId'
-import { safeGetAddress } from 'utils'
-import { useFeeData, useWalletClient } from 'wagmi'
-import { Hex, hexToBigInt } from 'viem'
-import { AppState, useAppDispatch } from 'state'
 import { useFeatureFlagEvaluation } from 'hooks/useDataDogRUM'
+import flatMap from 'lodash/flatMap'
+import { useCallback, useEffect, useMemo } from 'react'
+import { useSelector } from 'react-redux'
+import { AppState, useAppDispatch } from 'state'
+import { safeGetAddress } from 'utils'
+import { Hex, hexToBigInt } from 'viem'
+import { useBlockNumber, useFeeData, useWalletClient } from 'wagmi'
+import { GAS_PRICE_GWEI } from '../../types'
 import {
+  FarmStakedOnly,
+  SerializedPair,
+  ViewMode,
   addSerializedPair,
   addSerializedToken,
-  FarmStakedOnly,
-  removeSerializedToken,
-  SerializedPair,
-  updateUserDeadline,
-  updateUserFarmStakedOnly,
-  updateGasPrice,
-  addWatchlistToken,
   addWatchlistPool,
+  addWatchlistToken,
+  removeSerializedToken,
+  setSubgraphHealthIndicatorDisplayed,
+  updateGasPrice,
+  updateUserFarmStakedOnly,
+  updateUserFarmsViewMode,
+  updateUserLimitOrderAcceptedWarning,
   updateUserPoolStakedOnly,
   updateUserPoolsViewMode,
-  ViewMode,
-  updateUserFarmsViewMode,
-  updateUserPredictionChartDisclaimerShow,
-  updateUserPredictionChainlinkChartDisclaimerShow,
   updateUserPredictionAcceptedRisk,
+  updateUserPredictionChainlinkChartDisclaimerShow,
+  updateUserPredictionChartDisclaimerShow,
   updateUserUsernameVisibility,
-  setIsExchangeChartDisplayed,
-  setSubgraphHealthIndicatorDisplayed,
-  updateUserLimitOrderAcceptedWarning,
 } from '../actions'
-import { GAS_PRICE_GWEI } from '../../types'
+import { useUserChart } from './useUserChart'
 
 // Get user preference for exchange price chart
 // For mobile layout chart is hidden by default
-export function useExchangeChartManager(isMobile: boolean): [boolean, (isDisplayed: boolean) => void] {
-  const dispatch = useAppDispatch()
-  const isChartDisplayed = useSelector<AppState, AppState['user']['isExchangeChartDisplayed']>(
-    (state) => state.user.isExchangeChartDisplayed,
-  )
-
-  const setUserChartPreference = useCallback(
-    (isDisplayed: boolean) => {
-      dispatch(setIsExchangeChartDisplayed(isDisplayed))
-    },
-    [dispatch],
-  )
-
-  return [isMobile ? false : isChartDisplayed, setUserChartPreference]
+export function useExchangeChartManager(isMobile: boolean) {
+  return useUserChart(isMobile)
 }
+
 export function useSubgraphHealthIndicatorManager() {
   const dispatch = useAppDispatch()
   const isSubgraphHealthIndicatorDisplayed = useSelector<
@@ -188,7 +175,11 @@ export function useUserPredictionChartDisclaimerShow(): [boolean, (showDisclaime
 
   const setPredictionUserChartDisclaimerShow = useCallback(
     (showDisclaimer: boolean) => {
-      dispatch(updateUserPredictionChartDisclaimerShow({ userShowDisclaimer: showDisclaimer }))
+      dispatch(
+        updateUserPredictionChartDisclaimerShow({
+          userShowDisclaimer: showDisclaimer,
+        }),
+      )
     },
     [dispatch],
   )
@@ -207,7 +198,11 @@ export function useUserPredictionChainlinkChartDisclaimerShow(): [boolean, (show
 
   const setPredictionUserChainlinkChartDisclaimerShow = useCallback(
     (showDisclaimer: boolean) => {
-      dispatch(updateUserPredictionChainlinkChartDisclaimerShow({ userShowDisclaimer: showDisclaimer }))
+      dispatch(
+        updateUserPredictionChainlinkChartDisclaimerShow({
+          userShowDisclaimer: showDisclaimer,
+        }),
+      )
     },
     [dispatch],
   )
@@ -223,28 +218,16 @@ export function useUserUsernameVisibility(): [boolean, (usernameVisibility: bool
 
   const setUserUsernameVisibility = useCallback(
     (usernameVisibility: boolean) => {
-      dispatch(updateUserUsernameVisibility({ userUsernameVisibility: usernameVisibility }))
+      dispatch(
+        updateUserUsernameVisibility({
+          userUsernameVisibility: usernameVisibility,
+        }),
+      )
     },
     [dispatch],
   )
 
   return [userUsernameVisibility, setUserUsernameVisibility]
-}
-
-export function useUserTransactionTTL(): [number, (slippage: number) => void] {
-  const dispatch = useAppDispatch()
-  const userDeadline = useSelector<AppState, AppState['user']['userDeadline']>((state) => {
-    return state.user.userDeadline
-  })
-
-  const setUserDeadline = useCallback(
-    (deadline: number) => {
-      dispatch(updateUserDeadline({ userDeadline: deadline }))
-    },
-    [dispatch],
-  )
-
-  return [userDeadline, setUserDeadline]
 }
 
 export function useAddUserToken(): (token: ERC20Token) => void {
@@ -274,12 +257,20 @@ export function useFeeDataWithGasPrice(chainIdOverride?: number): {
 } {
   const { chainId: chainId_ } = useActiveChainId()
   const chainId = chainIdOverride ?? chainId_
+
+  const { data: blockNumber } = useBlockNumber({ watch: true })
+
   const gasPrice = useGasPrice(chainId)
-  const { data } = useFeeData({
+  const { data, refetch } = useFeeData({
     chainId,
-    enabled: chainId !== ChainId.BSC && chainId !== ChainId.BSC_TESTNET,
-    watch: true,
+    query: {
+      enabled: chainId !== ChainId.BSC && chainId !== ChainId.BSC_TESTNET,
+    },
   })
+
+  useEffect(() => {
+    refetch()
+  }, [blockNumber, refetch])
 
   if (gasPrice) {
     return {
@@ -304,20 +295,21 @@ export function useGasPrice(chainIdOverride?: number): bigint | undefined {
   const chainId = chainIdOverride ?? chainId_
   const { data: signer } = useWalletClient({ chainId })
   const userGas = useSelector<AppState, AppState['user']['gasPrice']>((state) => state.user.gasPrice)
-  const { data: bscProviderGasPrice = DEFAULT_BSC_GAS_BIGINT } = useSWR(
-    signer && chainId === ChainId.BSC && userGas === GAS_PRICE_GWEI.rpcDefault && ['bscProviderGasPrice', signer],
-    async () => {
+  const { data: bscProviderGasPrice = DEFAULT_BSC_GAS_BIGINT } = useQuery({
+    queryKey: ['bscProviderGasPrice', signer],
+
+    queryFn: async () => {
       // @ts-ignore
       const gasPrice = await signer?.request({
         method: 'eth_gasPrice' as any,
       })
       return hexToBigInt(gasPrice as Hex)
     },
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-    },
-  )
+
+    enabled: Boolean(signer && chainId === ChainId.BSC && userGas === GAS_PRICE_GWEI.rpcDefault),
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+  })
   if (chainId === ChainId.BSC) {
     return userGas === GAS_PRICE_GWEI.rpcDefault ? bscProviderGasPrice : BigInt(userGas ?? GAS_PRICE_GWEI.default)
   }
@@ -378,14 +370,23 @@ export function useTrackedTokenPairs(): [ERC20Token, ERC20Token][] {
   // pinned pairs
   const pinnedPairs = useMemo(() => (chainId ? PINNED_PAIRS[chainId] ?? [] : []), [chainId])
 
-  const { data: farmPairs = [] } = useSWRImmutable(chainId ? ['track-farms-pairs', chainId] : null, async () => {
-    const farms = await getFarmConfig(chainId)
+  const { data: farmPairs = [] } = useQuery({
+    queryKey: ['track-farms-pairs', chainId],
 
-    const fPairs: [ERC20Token, ERC20Token][] | undefined = farms
-      ?.filter((farm) => farm.pid !== 0)
-      ?.map((farm) => [deserializeToken(farm.token), deserializeToken(farm.quoteToken)])
+    queryFn: async () => {
+      const farms = await getFarmConfig(chainId)
 
-    return fPairs
+      const fPairs: [ERC20Token, ERC20Token][] | undefined = farms
+        ?.filter((farm) => farm.pid !== 0)
+        ?.map((farm) => [deserializeToken(farm.token), deserializeToken(farm.quoteToken)])
+
+      return fPairs
+    },
+
+    enabled: Boolean(chainId),
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   })
 
   // pairs for every token against every base
@@ -399,7 +400,7 @@ export function useTrackedTokenPairs(): [ERC20Token, ERC20Token][] {
               // loop through all bases on the current chain
               (BASES_TO_TRACK_LIQUIDITY_FOR[chainId] ?? [])
                 // to construct pairs of the given token with each base
-                .map((base) => {
+                .map((base: any) => {
                   const baseAddress = safeGetAddress(base.address)
 
                   if (baseAddress && baseAddress === tokenAddress) {
@@ -407,7 +408,7 @@ export function useTrackedTokenPairs(): [ERC20Token, ERC20Token][] {
                   }
                   return [base, token]
                 })
-                .filter((p): p is [ERC20Token, ERC20Token] => p !== null)
+                .filter((p: any): p is [ERC20Token, ERC20Token] => p !== null)
             )
           })
         : [],
@@ -434,7 +435,9 @@ export function useTrackedTokenPairs(): [ERC20Token, ERC20Token][] {
 
   return useMemo(() => {
     // dedupes pairs of tokens in the combined list
-    const keyed = combinedList.reduce<{ [key: string]: [ERC20Token, ERC20Token] }>((memo, [tokenA, tokenB]) => {
+    const keyed = combinedList.reduce<{
+      [key: string]: [ERC20Token, ERC20Token]
+    }>((memo, [tokenA, tokenB]) => {
       const sorted = tokenA.sortsBefore(tokenB)
       const key = sorted
         ? `${safeGetAddress(tokenA.address)}:${safeGetAddress(tokenB.address)}`

@@ -1,13 +1,14 @@
-import { Address, PublicClient, formatUnits } from 'viem'
-import BN from 'bignumber.js'
-import { BIG_TWO, BIG_ZERO } from '@pancakeswap/utils/bigNumber'
 import { ChainId } from '@pancakeswap/chains'
-import { getFarmsPrices } from './farmPrices'
+import { CurrencyParams, getCurrencyKey, getCurrencyListUsdPrice } from '@pancakeswap/price-api-sdk'
+import { BIG_ONE, BIG_TWO, BIG_ZERO } from '@pancakeswap/utils/bigNumber'
+import BN from 'bignumber.js'
+import { Address, PublicClient, formatUnits } from 'viem'
+import { FarmV2SupportedChainId, supportedChainIdV2 } from '../const'
+import { SerializedFarmConfig, isStableFarm } from '../types'
+import { getFarmLpTokenPrice, getFarmsPrices } from './farmPrices'
 import { fetchPublicFarmsData } from './fetchPublicFarmData'
 import { fetchStableFarmData } from './fetchStableFarmData'
-import { isStableFarm, SerializedFarmConfig } from '../types'
 import { getFullDecimalMultiplier } from './getFullDecimalMultiplier'
-import { FarmV2SupportedChainId, supportedChainIdV2 } from '../const'
 
 const evmNativeStableLpMap: Record<
   FarmV2SupportedChainId,
@@ -36,6 +37,11 @@ const evmNativeStableLpMap: Record<
     address: '0x4E96D2e92680Ca65D58A0e2eB5bd1c0f44cAB897',
     wNative: 'WBNB',
     stable: 'BUSD',
+  },
+  [ChainId.ARBITRUM_ONE]: {
+    address: '0x4E96D2e92680Ca65D58A0e2eB5bd1c0f44cAB897',
+    wNative: 'WETH',
+    stable: 'USDC',
   },
 }
 
@@ -103,10 +109,11 @@ export async function farmV2FetchFarms({
               token0Decimals: farm.token.decimals,
               token1Decimals: farm.quoteToken.decimals,
             })),
+        // TODO: remove hardcode allocPoint & totalRegularAllocPoint later
         ...getFarmAllocation({
-          allocPoint: poolInfos[index]?.allocPoint,
+          allocPoint: BigInt(farm?.allocPoint ?? 0) ?? poolInfos[index]?.allocPoint,
           isRegular: poolInfos[index]?.isRegular,
-          totalRegularAllocPoint,
+          totalRegularAllocPoint: BigInt(2305) || totalRegularAllocPoint,
           totalSpecialAllocPoint,
         }),
       }
@@ -123,7 +130,43 @@ export async function farmV2FetchFarms({
     }
   })
 
-  const farmsDataWithPrices = getFarmsPrices(farmsData, evmNativeStableLpMap[chainId as FarmV2SupportedChainId], 18)
+  const decimals = 18
+  const farmsDataWithPrices = getFarmsPrices(
+    farmsData,
+    evmNativeStableLpMap[chainId as FarmV2SupportedChainId],
+    decimals,
+  )
+
+  const tokensWithoutPrice = farmsDataWithPrices.reduce<Map<string, CurrencyParams>>((acc, cur) => {
+    if (cur.tokenPriceBusd === '0') {
+      acc.set(cur.token.address, cur.token)
+    }
+    if (cur.quoteTokenPriceBusd === '0') {
+      acc.set(cur.quoteToken.address, cur.quoteToken)
+    }
+    return acc
+  }, new Map<string, CurrencyParams>())
+  const tokenInfoList = Array.from(tokensWithoutPrice.values())
+  if (tokenInfoList.length) {
+    const prices = await getCurrencyListUsdPrice(tokenInfoList)
+
+    return farmsDataWithPrices.map((f) => {
+      if (f.tokenPriceBusd !== '0' && f.quoteTokenPriceBusd !== '0') {
+        return f
+      }
+      const tokenKey = getCurrencyKey(f.token)
+      const quoteTokenKey = getCurrencyKey(f.quoteToken)
+      const tokenPrice = new BN(tokenKey ? prices[tokenKey] ?? 0 : 0)
+      const quoteTokenPrice = new BN(quoteTokenKey ? prices[quoteTokenKey] ?? 0 : 0)
+      const lpTokenPrice = getFarmLpTokenPrice(f, tokenPrice, quoteTokenPrice, decimals)
+      return {
+        ...f,
+        tokenPriceBusd: tokenPrice.toString(),
+        quoteTokenPriceBusd: quoteTokenPrice.toString(),
+        lpTokenPrice: lpTokenPrice.toString(),
+      }
+    })
+  }
 
   return farmsDataWithPrices
 }
@@ -324,7 +367,7 @@ const getStableFarmDynamicData = ({
   // Amount of token in the LP that are staked in the MC
   const tokenAmountMcFixed = tokenAmountTotal.times(lpTokenRatio)
 
-  const quoteTokenAmountMcFixedByTokenAmount = tokenAmountMcFixed.times(tokenPriceVsQuote)
+  const quoteTokenAmountMcFixedByTokenAmount = tokenAmountMcFixed.times(BIG_ONE.div(tokenPriceVsQuote))
 
   const lpTotalInQuoteToken = quoteTokenAmountMcFixed.plus(quoteTokenAmountMcFixedByTokenAmount)
 

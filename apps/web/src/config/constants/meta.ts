@@ -1,12 +1,11 @@
-import memoize from 'lodash/memoize'
 import { ContextApi } from '@pancakeswap/localization'
-import { PageMeta } from './types'
+import memoize from 'lodash/memoize'
 import { ASSET_CDN } from './endpoints'
+import { PageMeta } from './types'
 
 export const DEFAULT_META: PageMeta = {
   title: 'PancakeSwap',
-  description:
-    'The most popular AMM on BSC by user count! Earn CAKE through yield farming or win it in the Lottery, then stake it in Syrup Pools to earn more tokens! Initial Farm Offerings (new token launch model pioneered by PancakeSwap), NFTs, and more, on a platform you can trust.',
+  description: 'Trade, earn, and own crypto on the all-in-one multichain DEX',
   image: `${ASSET_CDN}/web/og/hero.jpg`,
 }
 
@@ -64,11 +63,10 @@ const getPathList = (t: ContextApi['t']): PathList => {
 }
 
 export const getCustomMeta = memoize(
-  (path: string, t: ContextApi['t'], _: string): PageMeta => {
+  (path: string, t: ContextApi['t'], _: string): PageMeta | null => {
     const pathList = getPathList(t)
-    const pathMetadata =
-      pathList.paths[path] ??
-      pathList.paths[Object.entries(pathList.paths).find(([url, data]) => data.basePath && path.startsWith(url))?.[0]]
+    const basePath = Object.entries(pathList.paths).find(([url, data]) => data.basePath && path.startsWith(url))?.[0]
+    const pathMetadata = pathList.paths[path] ?? (basePath && pathList.paths[basePath])
 
     if (pathMetadata) {
       return {

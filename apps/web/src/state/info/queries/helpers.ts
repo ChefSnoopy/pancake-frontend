@@ -1,11 +1,11 @@
-import fromPairs from 'lodash/fromPairs'
 import { ONE_DAY_UNIX } from 'config/constants/info'
+import fromPairs from 'lodash/fromPairs'
 
 import dayjs from 'dayjs'
 import { TransactionType } from 'state/info/types'
-import { ChartEntry } from '../types'
 import { MultiChainName, multiChainStartTime } from '../constant'
-import { MintResponse, SwapResponse, BurnResponse, TokenDayData, PairDayData, PancakeDayData } from './types'
+import { ChartEntry } from '../types'
+import { BurnResponse, MintResponse, PairDayData, PancakeDayData, SwapResponse, TokenDayData } from './types'
 
 export const mapMints = (mint: MintResponse) => {
   return {
@@ -13,10 +13,10 @@ export const mapMints = (mint: MintResponse) => {
     hash: mint.id.split('-')[0],
     timestamp: mint.timestamp,
     sender: mint.to,
-    token0Symbol: mint.pair.token0.symbol,
-    token1Symbol: mint.pair.token1.symbol,
-    token0Address: mint.pair.token0.id,
-    token1Address: mint.pair.token1.id,
+    token0Symbol: mint.pair?.token0.symbol,
+    token1Symbol: mint.pair?.token1.symbol,
+    token0Address: mint.pair?.token0.id,
+    token1Address: mint.pair?.token1.id,
     amountUSD: parseFloat(mint.amountUSD),
     amountToken0: parseFloat(mint.amount0),
     amountToken1: parseFloat(mint.amount1),
@@ -29,10 +29,10 @@ export const mapBurns = (burn: BurnResponse) => {
     hash: burn.id.split('-')[0],
     timestamp: burn.timestamp,
     sender: burn.sender,
-    token0Symbol: burn.pair.token0.symbol,
-    token1Symbol: burn.pair.token1.symbol,
-    token0Address: burn.pair.token0.id,
-    token1Address: burn.pair.token1.id,
+    token0Symbol: burn.pair?.token0.symbol,
+    token1Symbol: burn.pair?.token1.symbol,
+    token0Address: burn.pair?.token0.id,
+    token1Address: burn.pair?.token1.id,
     amountUSD: parseFloat(burn.amountUSD),
     amountToken0: parseFloat(burn.amount0),
     amountToken1: parseFloat(burn.amount1),
@@ -45,10 +45,10 @@ export const mapSwaps = (swap: SwapResponse) => {
     hash: swap.id.split('-')[0],
     timestamp: swap.timestamp,
     sender: swap.from,
-    token0Symbol: swap.pair.token0.symbol,
-    token1Symbol: swap.pair.token1.symbol,
-    token0Address: swap.pair.token0.id,
-    token1Address: swap.pair.token1.id,
+    token0Symbol: swap.pair?.token0.symbol,
+    token1Symbol: swap.pair?.token1.symbol,
+    token0Address: swap.pair?.token0.id,
+    token1Address: swap.pair?.token1.id,
     amountUSD: parseFloat(swap.amountUSD),
     amountToken0: parseFloat(swap.amount0In) - parseFloat(swap.amount0Out),
     amountToken1: parseFloat(swap.amount1In) - parseFloat(swap.amount1Out),
@@ -89,8 +89,9 @@ export const fetchChartData = async (
   while (!allFound && !error) {
     // eslint-disable-next-line no-await-in-loop
     const { data, error: fetchError } = await getEntityDayDatas(chainName, skip)
+    const length = data?.length || 0
     skip += 1000
-    allFound = data?.length < 1000 || skip > 2000
+    allFound = length < 1000 || skip > 2000
     error = fetchError
     if (data) {
       chartEntries = chartEntries.concat(data)
@@ -110,8 +111,6 @@ export const fetchChartData = async (
       return [dayOrdinal, dayData]
     }),
   )
-
-  console.warn(formattedDayDatas)
 
   const availableDays = Object.keys(formattedDayDatas).map((dayOrdinal) => parseInt(dayOrdinal, 10))
 
@@ -154,7 +153,8 @@ export const fetchChartDataWithAddress = async (
     // eslint-disable-next-line no-await-in-loop
     const { data, error: fetchError } = await getEntityDayDatas(chainName, skip, address)
     skip += 1000
-    allFound = data?.length < 1000 || skip > 2000
+    const length = data?.length || 0
+    allFound = length < 1000 || skip > 2000
     error = fetchError
     if (data) {
       chartEntries = chartEntries.concat(data)
@@ -174,7 +174,6 @@ export const fetchChartDataWithAddress = async (
       return [dayOrdinal, dayData]
     }),
   )
-  console.warn(formattedDayDatas)
 
   const availableDays = Object.keys(formattedDayDatas).map((dayOrdinal) => parseInt(dayOrdinal, 10))
 

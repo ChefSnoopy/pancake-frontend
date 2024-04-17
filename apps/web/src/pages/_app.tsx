@@ -1,35 +1,38 @@
 import { ResetCSS, ScrollToTopButtonV2, ToastListener } from '@pancakeswap/uikit'
 import BigNumber from 'bignumber.js'
+import { SentryErrorBoundary } from 'components/ErrorBoundary'
 import GlobalCheckClaimStatus from 'components/GlobalCheckClaimStatus'
+import { PageMeta } from 'components/Layout/Page'
 import { NetworkModal } from 'components/NetworkModal'
 import { FixedSubgraphHealthIndicator } from 'components/SubgraphHealthIndicator/FixedSubgraphHealthIndicator'
 import TransactionsDetailModal from 'components/TransactionDetailModal'
 import { useAccountEventListener } from 'hooks/useAccountEventListener'
 import useEagerConnect from 'hooks/useEagerConnect'
-import useEagerConnectMP from 'hooks/useEagerConnect.bmp'
 import useLockedEndNotification from 'hooks/useLockedEndNotification'
 import useSentryUser from 'hooks/useSentryUser'
 import useThemeCookie from 'hooks/useThemeCookie'
 import useUserAgent from 'hooks/useUserAgent'
 import { NextPage } from 'next'
+import { DefaultSeo } from 'next-seo'
 import type { AppProps } from 'next/app'
 import dynamic from 'next/dynamic'
 import Head from 'next/head'
 import Script from 'next/script'
 import { Fragment } from 'react'
-import { DefaultSeo } from 'next-seo'
-import { PageMeta } from 'components/Layout/Page'
-import { SentryErrorBoundary } from 'components/ErrorBoundary'
 import { PersistGate } from 'redux-persist/integration/react'
+import { V4CakeIcon } from 'views/Home/components/V4CakeIcon'
+import { VercelToolbar } from 'components/VercelToolbar'
 
 import { useDataDogRUM } from 'hooks/useDataDogRUM'
 import { useLoadExperimentalFeatures } from 'hooks/useExperimentalFeatureEnabled'
+import { useVercelFeatureFlagOverrides } from 'hooks/useVercelToolbar'
+import { useInitGlobalWorker } from 'hooks/useWorker'
 import { persistor, useStore } from 'state'
 import { usePollBlockNumber } from 'state/block/hooks'
 import { Blocklist, Updaters } from '..'
 import { SEO } from '../../next-seo.config'
-import Menu from '../components/Menu'
 import Providers from '../Providers'
+import Menu from '../components/Menu'
 import GlobalStyle from '../style/Global'
 
 const EasterEgg = dynamic(() => import('components/EasterEgg'), { ssr: false })
@@ -41,8 +44,10 @@ BigNumber.config({
 })
 
 function GlobalHooks() {
+  useInitGlobalWorker()
   useDataDogRUM()
   useLoadExperimentalFeatures()
+  useVercelFeatureFlagOverrides()
   usePollBlockNumber()
   useEagerConnect()
   useUserAgent()
@@ -55,7 +60,6 @@ function GlobalHooks() {
 
 function MPGlobalHooks() {
   usePollBlockNumber()
-  useEagerConnectMP()
   useUserAgent()
   useAccountEventListener()
   useSentryUser()
@@ -91,28 +95,26 @@ function MyApp(props: AppProps<{ initialReduxState: any; dehydratedState: any }>
           // @ts-ignore
           <Component.Meta {...pageProps} />
         )}
-        <Blocklist>
-          {(Component as NextPageWithLayout).mp ? <MPGlobalHooks /> : <GlobalHooks />}
-          <ResetCSS />
-          <GlobalStyle />
-          <GlobalCheckClaimStatus excludeLocations={[]} />
-          <PersistGate loading={null} persistor={persistor}>
-            <Updaters />
-            <App {...props} />
-          </PersistGate>
-        </Blocklist>
+        {(Component as NextPageWithLayout).mp ? <MPGlobalHooks /> : <GlobalHooks />}
+        <ResetCSS />
+        <GlobalStyle />
+        <GlobalCheckClaimStatus excludeLocations={[]} />
+        <PersistGate loading={null} persistor={persistor}>
+          <Updaters />
+          <App {...props} />
+        </PersistGate>
       </Providers>
       <Script
         strategy="afterInteractive"
         id="google-tag"
         dangerouslySetInnerHTML={{
           __html: `
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','${process.env.NEXT_PUBLIC_NEW_GTAG}');
-          `,
+        `,
         }}
       />
     </>
@@ -131,6 +133,8 @@ type NextPageWithLayout = NextPage & {
    * */
   chains?: number[]
   isShowScrollToTopButton?: true
+  screen?: true
+  isShowV4IconButton?: false
   /**
    * Meta component for page, hacky solution for static build page to avoid `PersistGate` which blocks the page from rendering
    */
@@ -152,6 +156,8 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
   const Layout = Component.Layout || Fragment
   const ShowMenu = Component.mp ? Fragment : Menu
   const isShowScrollToTopButton = Component.isShowScrollToTopButton || true
+  const shouldScreenWallet = Component.screen || false
+  const isShowV4IconButton = Component.isShowV4IconButton || false
 
   return (
     <ProductionErrorBoundary>
@@ -166,6 +172,9 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
       <NetworkModal pageSupportedChains={Component.chains} />
       <TransactionsDetailModal />
       {isShowScrollToTopButton && <ScrollToTopButtonV2 />}
+      {shouldScreenWallet && <Blocklist />}
+      {isShowV4IconButton && <V4CakeIcon />}
+      <VercelToolbar />
     </ProductionErrorBoundary>
   )
 }

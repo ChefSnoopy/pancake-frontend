@@ -24,8 +24,7 @@ import {
   ReduxNodeRound,
 } from 'state/types'
 import { PredictionsRoundsResponse } from 'utils/types'
-import { formatUnits } from 'viem'
-import { Address } from 'wagmi'
+import { Address, formatUnits } from 'viem'
 import { resetUserState } from '../global/actions'
 import {
   fetchUserRounds,
@@ -99,7 +98,7 @@ export const fetchPredictionData = createAsyncThunk<
   // Round data
   const roundsResponse = await getRoundsData(epochs, extra.address, chainId)
   const initialRoundData: { [key: string]: ReduxNodeRound } = roundsResponse.reduce((accum, roundResponse) => {
-    const reduxNodeRound = serializePredictionsRoundsResponse(roundResponse)
+    const reduxNodeRound = serializePredictionsRoundsResponse(roundResponse, chainId)
 
     return {
       ...accum,
@@ -181,8 +180,14 @@ export const fetchNodeHistory = createAsyncThunk<
   const bets: Bet[] = roundData.reduce((accum: any, round: PredictionsRoundsResponse) => {
     const ledger = userRounds[Number(round.epoch)]
     const ledgerAmount = BigInt(ledger.amount)
-    const closePrice = round.closePrice ? parseFloat(formatUnits(round.closePrice, 8)) : null
-    const lockPrice = round.lockPrice ? parseFloat(formatUnits(round.lockPrice, 8)) : null
+    let closePrice = round.closePrice ? parseFloat(formatUnits(round.closePrice, 8)) : null
+    let lockPrice = round.lockPrice ? parseFloat(formatUnits(round.lockPrice, 8)) : null
+
+    // Chainlink in ARBITRUM lockPrice & closePrice will return 18 decimals, other chain is return 8 decimals.
+    if (chainId === ChainId.ARBITRUM_ONE && (round.closePrice || round.lockPrice)) {
+      closePrice = parseFloat(formatUnits(round.closePrice, 18))
+      lockPrice = parseFloat(formatUnits(round.lockPrice, 18))
+    }
 
     const getRoundPosition = () => {
       if (!closePrice) {
